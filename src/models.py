@@ -6,7 +6,7 @@ import hashlib
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Any, Optional
 
 
 class Severity(str, Enum):
@@ -67,3 +67,25 @@ class Action:
 class TestStep:
     action: Action
     expected_outcome: Optional[str] = None
+
+
+@dataclass
+class TestCase:
+    """A test case synthesized from exploration."""
+    id: str
+    title: str
+    origin_url: str
+    steps: list[TestStep] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
+    generated_at: float = field(default_factory=time.time)
+
+
+@dataclass
+class Anomaly:
+    """An observation the Analyzer flagged as a defect."""
+    severity: Severity
+    category: str
+    description: str
+    page_url: str
+    evidence: dict[str, Any] = field(default_factory=dict)
+    screenshot_path: Optional[str] = None
