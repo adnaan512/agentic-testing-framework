@@ -52,3 +52,18 @@ class PageState:
     def fingerprint(self) -> str:
         raw = f"{self.url}|{self.dom_hash}|{len(self.interactive_elements)}"
         return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+@dataclass
+class Action:
+    """A single step the agent can execute."""
+    action_type: ActionType
+    selector: Optional[str] = None
+    value: Optional[str] = None
+    description: str = ""
+
+
+@dataclass
+class TestStep:
+    action: Action
+    expected_outcome: Optional[str] = None
