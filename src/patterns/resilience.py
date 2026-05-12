@@ -5,8 +5,11 @@ from __future__ import annotations
 import functools
 import logging
 import time
+import json
 import threading
+from dataclasses import asdict, is_dataclass
 from enum import Enum
+from pathlib import Path
 from typing import Any, Callable, TypeVar
 
 logger = logging.getLogger("agentic_testing.patterns.resilience")
@@ -91,3 +94,37 @@ class CircuitBreaker:
 
     def status(self) -> dict[str, str]:
         return {k: self._get_state(k).value for k in self._state}
+
+
+def _to_serializable(obj):
+    if is_dataclass(obj) and not isinstance(obj, type):
+        return {k: _to_serializable(v) for k, v in asdict(obj).items()}
+    if isinstance(obj, Enum):
+        return obj.value
+    if isinstance(obj, (list, tuple)):
+        return [_to_serializable(v) for v in obj]
+    if isinstance(obj, dict):
+        return {k: _to_serializable(v) for k, v in obj.items()}
+    return obj
+
+
+class CheckpointManager:
+    """Persists agent state for crash recovery."""
+
+    def __init__(self, output_dir: str):
+        self.path = Path(output_dir) / "checkpoint.json"
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+
+    def save(self, state):
+        s = _to_serializable(state)
+        tmp = self.path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(s, indent=2, default=str))
+        tmp.replace(self.path)
+
+    def load(self):
+        if not self.path.exists():
+            return None
+        try:
+            return json.loads(self.path.read_text())
+        except (json.JSONDecodeError, OSError):
+            return None
