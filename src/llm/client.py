@@ -1,8 +1,9 @@
 """LLM client — provider-agnostic Protocol and JSON extraction."""
 
 from __future__ import annotations
-import json, logging, random
+import json, logging, os, random
 from typing import Any, Protocol
+from src.patterns.resilience import retry_with_backoff
 
 logger = logging.getLogger("agentic_testing.llm")
 
@@ -17,6 +18,24 @@ def _extract_json(text: str) -> dict[str, Any]:
     start, end = text.find("{"), text.rfind("}")
     if start == -1 or end == -1: raise ValueError("No JSON found")
     return json.loads(text[start:end+1])
+
+
+class AnthropicClient:
+    def __init__(self, model="claude-sonnet-4-6"):
+        import anthropic
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key: raise RuntimeError("ANTHROPIC_API_KEY is not set.")
+        self._client = anthropic.Anthropic(api_key=api_key)
+        self._model = model
+
+    @retry_with_backoff(max_retries=3, base_delay=1.0)
+    def complete_json(self, system_prompt, user_prompt):
+        resp = self._client.messages.create(
+            model=self._model, max_tokens=1024,
+            system=system_prompt + "\nRespond with ONLY valid JSON.",
+            messages=[{"role": "user", "content": user_prompt}])
+        text = "".join(b.text for b in resp.content if b.type == "text")
+        return _extract_json(text)
 
 
 class MockClient:
