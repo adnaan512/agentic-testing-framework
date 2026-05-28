@@ -32,7 +32,14 @@ class Supervisor:
                 if not self._run_one_step(step): break
             except Exception as exc:
                 logger.error("Step %d error: %s", step, exc)
+        self._finalize_test_case()
         self._driver.stop()
+
+    def _finalize_test_case(self):
+        if not self._path_actions: return
+        tc = self._planner.synthesize_test_case(self._path_states, self._path_actions)
+        self._knowledge.record_test_case(tc)
+
 
     def _run_one_step(self, step):
         state = self._driver.observe()
