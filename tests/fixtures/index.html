@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test App - Home</title>
+</head>
+<body>
+    <h1>Welcome to the Test App</h1>
+    <nav>
+        <a href="page2.html" data-testid="nav-page2">Go to Page 2</a>
+    </nav>
+    <form id="login-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" data-testid="input-username">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" data-testid="input-password">
+        <button type="submit" data-testid="btn-login">Log In</button>
+    </form>
+    <button id="toggle-menu" role="button" onclick="alert('Menu toggled')">Toggle Menu</button>
+    <script>
+        // Intentional console error for testing the analyzer's detection
+        console.error("Intentional test error: failed to load user preferences");
+    </script>
+</body>
+</html>
