@@ -122,7 +122,7 @@ class PlaywrightDriver(Monitor, Executor):
                 text = (handle.inner_text() or "").strip()[:80]
                 role = handle.get_attribute("role")
                 input_type = handle.get_attribute("type")
-                selector = f"{_INTERACTIVE_SELECTOR.split(',')[0].strip()}:nth-match-{i}"
+                selector = f"css={_INTERACTIVE_SELECTOR} >> nth={i}"
                 # Prefer a stable attribute-based selector when available.
                 test_id = handle.get_attribute("data-testid")
                 el_id = handle.get_attribute("id")
