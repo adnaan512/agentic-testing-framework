@@ -2,6 +2,8 @@
 
 An autonomous agent that explores a web application, discovers interactive elements, generates test cases, and reports defects — powered by a MAPE-K self-adaptive architecture with LLM-based decision making.
 
+![Agentic HTML Report Example](docs/assets/report_screenshot.png)
+
 ## Quick Start
 
 ```bash
