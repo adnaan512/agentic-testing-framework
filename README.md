@@ -1,25 +1,44 @@
 # Agentic Testing Framework
 
-An autonomous agent that explores a web application, discovers interactive elements, generates test cases, and reports defects — powered by a MAPE-K self-adaptive architecture with LLM-based decision making.
+Autonomous web testing agent built on the MAPE-K (Monitor–Analyze–Plan–Execute–Knowledge) 
+self-adaptive architecture. Point it at a URL — it explores the application, detects 
+anomalies, generates replayable regression test cases, and writes a self-contained HTML report.
+
+Built as a research project exploring agentic system design patterns for software testing 
+automation, motivated by work on resilient agentic systems (AsianPLoP 2026) and 
+LLM-based software engineering.
 
 ## Quick Start
 
 ```bash
-# 1. Install dependencies
+# Install
 pip install -r requirements.txt
 python -m playwright install chromium
 
-# 2. Run with mock LLM (no API key needed)
-python main.py --url https://example.com --provider mock --max-steps 15
+# Run with mock LLM — no API key needed, full MAPE-K loop still runs
+python main.py --url https://quotes.toscrape.com --provider mock --max-steps 15
 
-# 3. (Optional) Run with a real LLM for smarter exploration
+# Run with real LLM for smarter exploration
 export ANTHROPIC_API_KEY="sk-..."
 python main.py --url https://your-app.com --provider anthropic --max-steps 40
 ```
 
+> **Note:** the agent checkpoints after every step. Delete `run_output/` between 
+> runs if you want exploration to start fresh rather than resume.
+
+## Sample Output
+
+![Agentic Testing Report](docs/assets/testing_screenshot.PNG)
+
+*4 states visited, 1 anomaly detected, 1 regression test case generated 
+against `https://quotes.toscrape.com` using the mock provider.*
+
 ## Architecture
 
-The framework implements the **MAPE-K** (Monitor-Analyze-Plan-Execute-Knowledge) reference architecture for self-adaptive systems:
+The framework maps the five MAPE-K stages onto distinct, independently 
+testable components — the key design decision being that "how to interact 
+with a browser" and "how to decide what to test next" are completely 
+separate concerns.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -41,24 +60,33 @@ The framework implements the **MAPE-K** (Monitor-Analyze-Plan-Execute-Knowledge)
 └─────────────────────────────────────────────────────┘
 ```
 
-### Key Components
+### Components
 
-| Component | Interface | Implementation | Purpose |
-|-----------|-----------|---------------|---------|
-| Monitor | `Monitor` | `PlaywrightDriver` | Observe the live page: DOM hash, interactive elements, errors |
-| Analyzer | `Analyzer` | `HeuristicLLMAnalyzer` | Novelty detection + anomaly oracle (deterministic + LLM) |
-| Planner | `Planner` | `LLMPlanner` | Choose next action; synthesize test cases from paths |
-| Executor | `Executor` | `PlaywrightDriver` | Execute actions against the browser |
-| Knowledge | `KnowledgeBase` | `JsonKnowledgeBase` | Visited-state tracking, anomaly log, test case store |
+| Component | Implementation | Purpose |
+|-----------|---------------|---------|
+| Monitor | `PlaywrightDriver` | DOM snapshot: hash, elements, console errors |
+| Analyzer | `HeuristicLLMAnalyzer` | Novelty detection + anomaly oracle |
+| Planner | `LLMPlanner` | Action selection + test case synthesis |
+| Executor | `PlaywrightDriver` | Browser action execution with retries |
+| Knowledge | `JsonKnowledgeBase` | Visited states, anomaly log, test store |
 
 ### Resilience Patterns
 
-| Pattern | Purpose |
-|---------|---------|
-| `retry_with_backoff` | Handles transient failures (flaky selectors, network blips) |
-| `CircuitBreaker` | Per-action failure budget — stops hammering a broken element |
+Each pattern addresses a specific failure mode in LLM-in-the-loop systems:
+
+| Pattern | Failure mode it handles |
+|---------|------------------------|
+| `retry_with_backoff` | Transient failures — flaky selectors, network blips |
+| `CircuitBreaker` | Persistent failures — stops retrying a permanently broken action |
 | `CheckpointManager` | Crash recovery — resume from last good state |
-| `Bulkhead` | Isolates concurrent sessions so one crash doesn't kill the run |
+| `Bulkhead` | Fault isolation — one bad session can't abort the whole run |
+
+## Known Limitations
+
+- Mock LLM uses rule-based action selection; real LLM provider achieves 
+  significantly deeper and more varied exploration
+- Element extraction capped at 25 elements per page to keep LLM context manageable
+- Currently supports Chromium only via Playwright
 
 ## Project Structure
 
@@ -92,17 +120,11 @@ agentic-testing-framework/
     └── ARCHITECTURE.md              # Detailed design rationale
 ```
 
-## Example Output
-
-Here is what the generated HTML defect report looks like after a run:
-
-![Agentic HTML Report Example](docs/assets/testing_screenshot.PNG)
-
 ## Running Tests
 
 ```bash
 pip install -r requirements-dev.txt
-pytest tests/ -v
+pytest tests/ -v          # unit tests for resilience patterns, no browser needed
 ```
 
 ## CLI Options
