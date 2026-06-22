@@ -2,8 +2,6 @@
 
 An autonomous agent that explores a web application, discovers interactive elements, generates test cases, and reports defects — powered by a MAPE-K self-adaptive architecture with LLM-based decision making.
 
-![Agentic HTML Report Example](docs/assets/report_screenshot.png)
-
 ## Quick Start
 
 ```bash
@@ -93,6 +91,12 @@ agentic-testing-framework/
 └── docs/
     └── ARCHITECTURE.md              # Detailed design rationale
 ```
+
+## Example Output
+
+Here is what the generated HTML defect report looks like after a run:
+
+![Agentic HTML Report Example](docs/assets/testing_screenshot.PNG)
 
 ## Running Tests
 
