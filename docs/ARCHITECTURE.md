@@ -1,8 +1,17 @@
+> This document describes the architectural decisions behind the framework.
+> The design is motivated by Huang et al. (2026) on resilient agentic 
+> system design patterns and draws on classical MAPE-K literature 
+> from autonomic computing.
 # Architecture
 
 ## Design Philosophy
 
-This project implements the **MAPE-K** (Monitor-Analyze-Plan-Execute-Knowledge) reference architecture from autonomic computing. The core insight: instead of one monolithic LLM prompt that "does everything", each stage of the testing loop is a distinct, independently testable, independently swappable component.
+Most test automation breaks when the app changes  because a human 
+wrote the steps. This framework takes a different approach: the agent 
+observes application state, decides what's novel or broken, and 
+generates its own test steps. The MAPE-K architecture from autonomic 
+computing maps directly onto this loop and keeps each concern isolated 
+enough to test independently.
 
 ## Why MAPE-K?
 
